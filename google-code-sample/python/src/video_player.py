@@ -20,6 +20,16 @@ class VideoPlayer:
         self.flagged_videos = {}
         # All video IDs available
 
+    def video_print(self, video_object, paused=False, flagged=False):
+        video_title = video_object.title
+        video_id = video_object.video_id
+        video_tags = str(' '.join(video_object.tags))
+        output = video_title + " (" + video_id + ") [" + video_tags + "]"
+        if paused:
+            output += " - PAUSED"
+        elif flagged:
+            output += " - FLAGGED " + self.flagged_videos[video_id] + ""
+        return output
 
     def search_output_print(self, found_videos, isFound, search_term):
         if not isFound:
@@ -31,7 +41,7 @@ class VideoPlayer:
                     video_object = self._video_library.get_video(video)
                     video_title = video_object.title
                     video_tags = str(' '.join(video_object.tags))
-                    print(" " + str(counter) + ") " + video_title + " (" + video + ") [" + video_tags + "]")
+                    print(" " + str(counter) + ") " + self.video_print(video_object))
                     counter += 1
             print("Would you like to play any of the above? If yes, specify the number of the video.")
             print("If your answer is not a valid number, we will assume it's a no.")
@@ -57,11 +67,11 @@ class VideoPlayer:
         print("Here's a list of all available videos:")
         for element in videoDict:
             video_id = videoDict[element][0]
-            video_tags = ' '.join(videoDict[element][1])
+            video_object = self._video_library.get_video(video_id)
             if video_id in self.flagged_videos:
-                print(" " + element + " (" + videoDict[element][0] + ") [" + str(video_tags) + "] - FLAGGED " + self.flagged_videos[video_id] + "")
+                print(" " + self.video_print(video_object, flagged=True))
             else:
-                print(" " + element + " (" + videoDict[element][0] + ") [" + str(video_tags) + "]")
+                print(" " + self.video_print(video_object))
             # This is just so string appears appropriately.
 
     
@@ -138,23 +148,21 @@ class VideoPlayer:
         # Got information on self.video_playing["paused"]
         if self.video_playing["playing"]:
             video_object = self.video_playing["video_object"]
-            video_id = video_object.video_id
-            video_tags = ' '.join(video_object.tags)
             
             if not self.video_playing["paused"]:
-                print("Currently playing: " + self.video_playing["title"] + " (" + video_id + ") [" + str(video_tags) + "]")
-                # print(" " + element + " (" + str(videoDict[element][0]) + ") [" + str(video_tags) + "]")
+                print("Currently playing: " + self.video_print(video_object))
             elif self.video_playing["paused"]:
-                print("Currently playing: " + self.video_playing["title"] + " (" + video_id + ") [" + str(video_tags) + "] - PAUSED" )
+                print("Currently playing: " + self.video_print(video_object, paused=True))
         else:
             print("No video is currently playing")
 
     def create_playlist(self, playlist_name):
-        if playlist_name.lower() in self.playlist_names:
+        keyName = playlist_name.lower()
+        if keyName in self.playlist_names:
             print("Cannot create playlist: A playlist with the same name already exists")
         else:
-            self.playlist_names[playlist_name.lower()] = Playlist(playlist_name)
-            print("Successfully created new playlist: " + self.playlist_names[playlist_name.lower()].title)
+            self.playlist_names[keyName] = Playlist(playlist_name)
+            print("Successfully created new playlist: " + self.playlist_names[keyName].title)
 
 
     def add_to_playlist(self, playlist_name, video_id):
@@ -198,11 +206,10 @@ class VideoPlayer:
             else:
                 for video_object in (playlist_videos):
                     video_id = video_object.video_id
-                    video_tags = str(' '.join(video_object.tags))
                     if video_id in self.flagged_videos:
-                        print(" " + video_object.title + " (" + video_id + ") [" + video_tags + "] - FLAGGED " + self.flagged_videos[video_id] + "")
+                        print(" " + self.video_print(video_object, flagged=True))
                     else:
-                        print(" " + video_object.title + " (" + video_id + ") [" + video_tags + "]")
+                        print(" " + self.video_print(video_object))
         
 
     def remove_from_playlist(self, playlist_name, video_id):
